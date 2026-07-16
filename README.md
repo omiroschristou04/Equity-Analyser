@@ -1,5 +1,4 @@
 # Equity Analyser
-# equity-analyzer
 
 Multi-method valuation tool for individual equities. Input a ticker, get a structured research report.
 
