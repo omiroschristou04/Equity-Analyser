@@ -64,6 +64,6 @@ def bajaj_compounder(revenue_growth_5yr, roe_history, roic, wacc, share_count_hi
     older_roe = statistics.mean(roe_history[2:])
     checks['roe_not_eroding'] = recent_roe >= older_roe
     checks['roic_above_wacc'] = roic > wacc
-    checks['no_dilution'] = share_count_history[-1] <= share_count_history[0]
+    checks['no_dilution'] = share_count_history[0] <= share_count_history[-1]
     checks['score'] = sum(1 for k, v in checks.items() if v is True)
     return checks
