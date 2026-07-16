@@ -59,6 +59,14 @@ flows are worth under stated assumptions. It says nothing about when, or
 whether, the market closes the gap — that needs a catalyst and a horizon, which
 sit outside the model.
 
+## Known limitations
+
+The DCF is sensitive to the base year. Two distortions found in testing:
+
+- **One-off working capital swings.** A single year's change in working capital, compounded and capitalised, can move implied growth by more than 10 percentage points. Mitigated by averaging across available years.
+- **Investment cycles.** Reported capex at a company mid-build reflects growth spend, not maintenance. Stripping it from the base while also demanding the growth it funds double-penalises the company. The base uses D&A as a maintenance proxy.
+
+The model flags when implied growth exceeds historical revenue growth by more than 50%, and when terminal value exceeds 75% of enterprise value. In both cases the output is a diagnostic, not a valuation.
 ## Status
 
 In development.
