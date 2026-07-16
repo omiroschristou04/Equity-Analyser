@@ -1,3 +1,6 @@
+# Peer universe cache (regenerated on demand)
+peer_cache.json
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

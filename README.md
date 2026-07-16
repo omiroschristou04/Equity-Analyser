@@ -33,13 +33,20 @@ per criterion plus an aggregate score:
 
 - **Buffett-style quality** — sustained ROE, low leverage, consistent FCF
 - **Lynch GARP** — PEG, earnings growth band, inventory vs sales
-- **Greenblatt Magic Formula** — earnings yield and ROIC ranking
+- **Greenblatt Magic Formula** — earnings yield and ROIC as sector percentile
+  ranks against the peer universe
 - **Graham deep value** — P/B, current ratio, earnings consistency
 - **Goldberg technical health** — 200-day MA position, overextension flag,
   volume-confirmed declines
-- **Inglis-Jones / Gleave** — current FCF strength with momentum confirmation
+- **Inglis-Jones / Gleave** — FCF yield above the sector median, with 12-1
+  momentum confirmation
 - **Bajaj compounder test** — multi-year growth durability, ROIC above WACC,
   dilution check
+
+All seven run. Greenblatt and Inglis-Jones / Gleave are sector-relative: they
+draw earnings-yield / ROIC percentiles and the sector FCF yield from a peer
+universe (`peers.py`). That peer universe is a **fixed large-cap list per
+sector**, cached locally — a comparison set, not a full sector screen.
 
 These are codified from published criteria and from *Stock Market Maestros*
 (2024). The tool tests whether a stock meets stated rules. It does not claim to
@@ -67,6 +74,8 @@ The DCF is sensitive to the base year. Two distortions found in testing:
 - **Investment cycles.** Reported capex at a company mid-build reflects growth spend, not maintenance. Stripping it from the base while also demanding the growth it funds double-penalises the company. The base uses D&A as a maintenance proxy.
 
 The model flags when implied growth exceeds historical revenue growth by more than 50%, and when terminal value exceeds 75% of enterprise value. In both cases the output is a diagnostic, not a valuation.
+
+**Non-financial equities only.** The core measures — enterprise value, capex, unlevered free cash flow, ROIC vs WACC — are undefined for banks and REITs, where debt is raw material rather than financing. Financials and Real Estate are explicitly out of scope: the tool exits with an explanation rather than producing a NaN-filled, misleading report. Those names need a different framework (P/B against ROTE, or a dividend discount model).
 ## Status
 
 In development.
