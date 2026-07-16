@@ -55,11 +55,14 @@ def inglis_jones_gleave(fcf_yield, sector_fcf_yield, momentum_12_1):
     return checks
 
 
-def bajaj_compounder(revenue_growth_5yr, roic, wacc, share_count_history):
+def bajaj_compounder(revenue_growth_5yr, roe_history, roic, wacc, share_count_history):
     """Durability, not speed. Bajaj asks whether the business compounds, not how fast."""
     checks = {}
     checks['growth_every_year'] = all(g > 0 for g in revenue_growth_5yr)
     checks['growth_stable'] = statistics.stdev(revenue_growth_5yr) < 10
+    recent_roe = statistics.mean(roe_history[:2])
+    older_roe = statistics.mean(roe_history[2:])
+    checks['roe_not_eroding'] = recent_roe >= older_roe
     checks['roic_above_wacc'] = roic > wacc
     checks['no_dilution'] = share_count_history[-1] <= share_count_history[0]
     checks['score'] = sum(1 for k, v in checks.items() if v is True)
