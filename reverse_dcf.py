@@ -9,6 +9,13 @@ TERMINAL_GROWTH = 0.025
 STAGE1_YEARS = 5
 FADE_YEARS = 5
 
+# Revenue CAGR is meaningless when the oldest period is a tiny fraction of the
+# latest: a near-zero base makes the ratio explode (LXRX's $139k -> $49.8m base
+# yields a 610% CAGR), which silently defeats the implied-growth plausibility
+# check below (nothing in 2-30% can exceed 1.5x of 610%). Require the oldest
+# revenue to be at least this fraction of the latest, else suppress the CAGR.
+MIN_CAGR_BASE_FRACTION = 0.10
+
 # yfinance labels D&A differently by industry (energy uses depletion wording).
 DA_ROWS = (
     'Depreciation And Amortization',
@@ -35,6 +42,22 @@ def _first_row0(df, names):
         if v is not None:
             return v
     return None
+
+
+def _hist_rev_cagr(revenue):
+    """CAGR of a newest-first revenue series.
+
+    Returns (cagr, suppressed). `suppressed` is True when the oldest revenue is
+    below MIN_CAGR_BASE_FRACTION of the latest — a near-zero base that would make
+    the CAGR explode and mislead (LXRX: 610%). `cagr` is None when suppressed or
+    when the series is too short or non-positive.
+    """
+    if len(revenue) >= 2 and revenue[-1] > 0:
+        if revenue[-1] < revenue[0] * MIN_CAGR_BASE_FRACTION:
+            return None, True
+        years = len(revenue) - 1
+        return (revenue[0] / revenue[-1]) ** (1 / years) - 1, False
+    return None, False
 
 
 def _net_debt(bs):
@@ -138,11 +161,9 @@ def reverse_dcf(ticker):
         return result
 
     revenue = _clean(fin.loc['Total Revenue']) if 'Total Revenue' in fin.index else []
-    if len(revenue) >= 2 and revenue[-1] > 0:
-        years = len(revenue) - 1
-        result['hist_rev_cagr'] = (revenue[0] / revenue[-1]) ** (1 / years) - 1
-    else:
-        result['hist_rev_cagr'] = None
+    # Suppression (near-zero base) keeps a 610% CAGR from silently disabling the
+    # plausibility check below — see _hist_rev_cagr.
+    result['hist_rev_cagr'], result['hist_rev_cagr_suppressed'] = _hist_rev_cagr(revenue)
 
     def value_at_growth(g):
         flows = []
@@ -179,7 +200,14 @@ def reverse_dcf(ticker):
     g = result['implied_growth']
     cagr = result['hist_rev_cagr']
     if result['reconciled']:
-        if cagr is not None and cagr > 0 and g > cagr * 1.5:
+        if result['hist_rev_cagr_suppressed']:
+            result['flags'].append(
+                "Historical revenue CAGR cannot be evaluated: the oldest revenue "
+                f"in the series is below {MIN_CAGR_BASE_FRACTION:.0%} of the latest, "
+                "so its growth rate explodes off a near-zero base. The implied-growth "
+                "plausibility check was not applied — do not read its silence as a pass."
+            )
+        elif cagr is not None and cagr > 0 and g > cagr * 1.5:
             result['flags'].append(
                 f"Implied growth {g:.0%} far exceeds historical revenue CAGR "
                 f"{cagr:.1%}. Model cannot value this name credibly — treat as diagnostic."
