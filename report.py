@@ -118,6 +118,12 @@ STATUS_BG = {
     'OUT OF SCOPE': 'linear-gradient(135deg,#475569,#334155)',
 }
 
+# Choice, not a standard: how far the best- and worst-scoring checklists must
+# diverge in pass-ratio (0-1) before the briefing describes the screens as "in
+# conflict" rather than "broadly in agreement". Presentation wording only — it
+# changes no calculation.
+CONFLICT_SPREAD_THRESHOLD = 0.34
+
 CSS = """
 :root{
   --navy:#0a1628; --pos:#16a34a; --neg:#dc2626; --amber:#d97706;
@@ -298,7 +304,7 @@ def _conflict_sentence(a):
     worst = min(ratios, key=lambda k: ratios[k][0])
     hr, hs, ht = ratios[best]
     lr, ls, lt = ratios[worst]
-    if best == worst or hr - lr < 0.34:
+    if best == worst or hr - lr < CONFLICT_SPREAD_THRESHOLD:
         return (f"The seven screens broadly agree, with no sharp framework conflict "
                 f"(scores span {ls}/{lt} to {hs}/{ht}).")
     return (f"The screens conflict: {best} is the strongest fit ({hs}/{ht}) while "
@@ -581,10 +587,14 @@ def _scope_card(a):
 </section>"""
 
 
-FOOTER = f"""
+def _footer():
+    # Built at render time, not import time, so the generation timestamp is
+    # current on a warm (long-running) Streamlit server.
+    stamp = datetime.datetime.now().strftime('%Y-%m-%d %H:%M')
+    return f"""
 <footer>
   {_explain('methodology', 'text-align:left;color:var(--muted);')}
-  <div style="margin-top:16px;">Generated {datetime.datetime.now().strftime('%Y-%m-%d %H:%M')}
+  <div style="margin-top:16px;">Generated {stamp}
   &middot; market data via Yahoo Finance &middot; for informational purposes only — not
   investment advice.</div>
 </footer>"""
@@ -602,7 +612,7 @@ def build_report_html(ticker):
     a = analyse(ticker)
     if a.get('out_of_scope'):
         body = (_masthead(a, 'OUT OF SCOPE')
-                + f'<div class="wrap">{_scope_card(a)}{FOOTER}</div>')
+                + f'<div class="wrap">{_scope_card(a)}{_footer()}</div>')
         return _document(body)
 
     r = reverse_dcf(ticker)
@@ -614,7 +624,7 @@ def build_report_html(ticker):
             + _reverse_dcf_card(r)
             + _relative_card(a)
             + _checklists_card(a)
-            + FOOTER + '</div>')
+            + _footer() + '</div>')
     return _document(body)
 
 
