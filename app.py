@@ -4,6 +4,8 @@ Streamlit's only job is the ticker input and the Run button; the entire report
 is a single self-contained HTML document built by report.py and rendered in one
 iframe via st.components.v1.html.
 """
+import datetime
+
 import streamlit as st
 import streamlit.components.v1 as components
 
@@ -23,6 +25,15 @@ if st.button("Run", type="primary"):
             with st.spinner(f"Building report for {ticker}…"):
                 html_doc = build_report_html(ticker)
             components.html(html_doc, height=3200, scrolling=True)
+            # The document is fully self-contained (inline base64 chart), so the
+            # downloaded file opens offline; only the Google font degrades.
+            date = datetime.datetime.now().strftime("%Y%m%d")
+            st.download_button(
+                label="Download report",
+                data=html_doc,
+                file_name=f"{ticker}_{date}.html",
+                mime="text/html",
+            )
         except Exception as exc:
             # Never surface a stack trace — just the ticker and the reason.
             st.error(f"Could not generate report for {ticker}: "
