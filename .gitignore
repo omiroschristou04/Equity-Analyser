@@ -1,6 +1,9 @@
 # Peer universe cache (regenerated on demand)
 peer_cache.json
 
+# Batch screen output (regenerated on demand)
+screen_results.csv
+
 # Private styling reference (not repo content)
 reference_report.html
 
