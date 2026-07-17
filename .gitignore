@@ -1,6 +1,9 @@
 # Peer universe cache (regenerated on demand)
 peer_cache.json
 
+# Private styling reference (not repo content)
+reference_report.html
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
