@@ -1,5 +1,5 @@
 # Equity Analyser
-
+**[▶ Live app](https://equity-analyseromiroschristou.streamlit.app/)**
 Multi-method valuation tool for individual equities. Input a ticker, get a structured research report.
 
 ## Why
